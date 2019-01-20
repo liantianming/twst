@@ -1,0 +1,346 @@
+{
+    "name": {{cluster.name}},
+    "description": {{cluster.description}},  
+ 
+    "vxnet": {{cluster.vxnet}},      
+	"backup_policy": "device",  
+	"incremental_backup_supported": true, 
+    "nodes": [{
+		"role": "pg",
+        "container": {
+            "type": "lxc",
+            "image": "img-hrd8h6yw",
+            "zone": "sh1a"
+        },
+        "cpu": {{cluster.pg.cpu}},
+        "memory": {{cluster.pg.memory}},
+        "instance_class": {{cluster.pg.instance_class}},
+		"count": {{cluster.pg.count}},
+		"volume": {
+            "size": {{cluster.pg.volume_size}},
+            "mount_point": "/data",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4" 
+        },
+        "services": {
+			"init": {  
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py init",
+                "timeout": 300
+            },
+			"start": { 
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py start",
+                "timeout": 300 
+            },
+			"restart": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py restart",
+                "timeout": 300 
+            },
+            "stop": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py stop",
+                "timeout": 300 
+            } ,
+			"rebuild_standby": {
+                "type": "custom",
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py rebuild",
+				"service_params": {
+                    "node_ip": {{service_params.node_ip}}
+                },
+                "timeout": 36000 
+			},
+			"scale_out": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py scale_out",
+                "timeout": 36000 
+			},
+			"scale_in": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py scale_in",
+                "timeout": 36000 
+			},
+			 "backup": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py backup", 
+                "timeout": 36000
+            }
+        },
+		"health_check": {
+            "enable": true,
+            "interval_sec": 60,
+            "timeout_sec": 30,
+            "action_timeout_sec": 60,
+            "healthy_threshold": 2,
+            "unhealthy_threshold": 2,
+            "check_cmd": "/usr/lib/postgresql/scripts/pgmanager.py health_check",
+            "action_cmd": "/usr/lib/postgresql/scripts/pgmanager.py health_check_action"
+        },
+		"monitor": {
+        "enable": true,
+        "cmd": "/usr/lib/postgresql/scripts/pgmanager.py monitor",
+        "items": {
+        	"delay_seconds": {
+                "unit": "s",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },			
+            "conn_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },
+            "commit_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },
+			"wait_event_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },
+            "deadlock_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            }
+        },
+		"groups": {
+			"delay_seconds_grp": ["delay_seconds"], 
+			"conn_cnt_grp": ["conn_cnt"],
+			"commit_cnt_grp": ["commit_cnt"],
+			"wait_event_cnt_grp": ["wait_event_cnt"],
+			"deadlock_cnt_grp": ["deadlock_cnt"]
+		},
+		"display": ["delay_seconds_grp","conn_cnt_grp","commit_cnt_grp","wait_event_cnt_grp","deadlock_cnt_grp"],
+		"alarm": ["delay_seconds", "conn_cnt", "deadlock_cnt"]
+     }
+    },{
+		"role": "ri",
+        "container": {
+            "type": "lxc",
+            "image": "img-hrd8h6yw",
+            "zone": "sh1a"
+        },
+        "cpu": {{cluster.ri.cpu}},
+        "memory": {{cluster.ri.memory}},
+        "instance_class": {{cluster.ri.instance_class}},
+		"count": {{cluster.ri.count}},
+		"volume": {
+            "size": {{cluster.ri.volume_size}},
+            "mount_point": "/data",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4" 
+        },
+        "services": {
+			"init": {  
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py init",
+                "timeout": 600
+            },
+			"start": { 
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py start",
+                "timeout": 600 
+            },
+			"restart": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py restart",
+                "timeout": 600 
+            },
+            "stop": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py stop",
+                "timeout": 600 
+            } ,
+			"rebuild_standby": {
+                "type": "custom",
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py rebuild",
+				"service_params": {
+                    "node_ip": {{service_params.node_ip}}
+                },
+                "timeout": 36000 
+			},
+			"scale_out": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py scale_out",
+                "timeout": 36000 
+			},
+			"scale_in": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py scale_in",
+                "timeout": 36000 
+			},
+			 "backup": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py backup", 
+                "timeout": 36000
+            },"restore": {
+                "cmd": "/usr/lib/postgresql/scripts/pgmanager.py restore", 
+                "timeout": 600
+            }
+        },
+		"health_check": {
+            "enable": true,
+            "interval_sec": 60,
+            "timeout_sec": 30,
+            "action_timeout_sec": 60,
+            "healthy_threshold": 2,
+            "unhealthy_threshold": 2,
+            "check_cmd": "/usr/lib/postgresql/scripts/pgmanager.py health_check",
+            "action_cmd": "/usr/lib/postgresql/scripts/pgmanager.py health_check_action"
+        },
+		"monitor": {
+        "enable": true,
+        "cmd": "/usr/lib/postgresql/scripts/pgmanager.py monitor",
+        "items": {
+        	"delay_seconds": {
+                "unit": "s",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },			
+            "conn_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },
+            "commit_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },
+			"wait_event_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            },
+            "deadlock_cnt": {
+                "unit": "",
+                "value_type": "int",
+                "statistics_type": "latest",
+                "scale_factor_when_display": 1
+            }
+        },
+		"groups": {
+			"delay_seconds_grp": ["delay_seconds"], 
+			"conn_cnt_grp": ["conn_cnt"],
+			"commit_cnt_grp": ["commit_cnt"],
+			"wait_event_cnt_grp": ["wait_event_cnt"],
+			"deadlock_cnt_grp": ["deadlock_cnt"]
+		},
+		"display": ["delay_seconds_grp","conn_cnt_grp","commit_cnt_grp","wait_event_cnt_grp","deadlock_cnt_grp"],
+		"alarm": ["delay_seconds", "conn_cnt", "deadlock_cnt"]
+     }
+    },{"role": "pgpool",
+        "container": {
+            "type": "lxc",
+            "image": "img-hrd8h6yw",
+            "zone": "sh1a"
+        },
+        "cpu": {{cluster.pgpool.cpu}},
+        "memory": {{cluster.pgpool.memory}},
+        "instance_class": {{cluster.pgpool.instance_class}},
+		"count": {{cluster.pgpool.count}},
+		"volume": {
+            "size": {{cluster.pgpool.volume_size}},
+            "mount_point": "/data",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4" 
+        },
+        "services": {
+			"start": { 
+                "cmd": "/usr/lib/postgresql/scripts/pgpool.py start",
+                "timeout": 600 
+            },
+			"restart": {
+                "cmd": "/usr/lib/postgresql/scripts/pgpool.py restart",
+                "timeout": 600 
+            },
+            "stop": {
+                "cmd": "/usr/lib/postgresql/scripts/pgpool.py stop",
+                "timeout": 600 
+            }
+        },
+		"health_check": {
+            "enable": true,
+            "interval_sec": 60,
+            "timeout_sec": 30,
+            "action_timeout_sec": 60,
+            "healthy_threshold": 2,
+            "unhealthy_threshold": 2,
+            "check_cmd": "/usr/lib/postgresql/scripts/pgpool.py health_check",
+            "action_cmd": "/usr/lib/postgresql/scripts/pgpool.py health_check_action"
+        },
+		"env": {
+		  "port": {{env.pgpool_port}},
+		  "max_pool": {{env.max_pool}},
+		  "num_init_children": {{env.num_init_children}},
+		  "child_life_time": {{env.child_life_time}},
+		  "connection_life_time": {{env.connection_life_time}},
+		  "client_idle_limit": {{env.client_idle_limit}},
+		  "serialize_accept":{{env.serialize_accept}}
+		}
+	}],
+	"display_tabs": {
+        "node_details": {
+            "cmd": "/usr/lib/postgresql/scripts/pgmanager.py nodes_detail",
+            "timeout": 10,
+            "description": ""
+        }
+    },
+    "advanced_actions": ["scale_horizontal"],
+	"env": {
+		  "pg_version": {{env.pg_version}},
+		  "sync_stream_repl": {{env.sync_stream_repl}},	
+		  "db_name": {{env.db_name}},
+		  "user_name": {{env.user_name}},
+		  "password": {{env.password}},
+		  "load_read_request_to_primary": {{env.load_read_request_to_primary}},
+		  "max_connections": {{env.max_connections}},
+		  "wal_buffers": {{env.wal_buffers}},
+		  "work_mem": {{env.work_mem}},
+		  "effective_cache_size": {{env.effective_cache_size}},
+		  "maintenance_work_mem": {{env.maintenance_work_mem}},
+		  "wal_keep_segments": {{env.wal_keep_segments}},
+		  "checkpoint_timeout": {{env.checkpoint_timeout}},
+		  "autovacuum": {{env.autovacuum}},
+		  "vacuum_cost_delay": {{env.vacuum_cost_delay}},
+		  "autovacuum_naptime": {{env.autovacuum_naptime}},
+		  "vacuum_cost_limit": {{env.vacuum_cost_limit}},
+		  "bgwriter_delay": {{env.bgwriter_delay}},
+		  "bgwriter_lru_multiplier": {{env.bgwriter_lru_multiplier}}, 
+		  "wal_writer_delay": {{env.wal_writer_delay}},
+		  "fsync": {{env.fsync}},
+		  "commit_delay": {{env.commit_delay}},
+		  "commit_siblings": {{env.commit_siblings}},
+		  "enable_bitmapscan": {{env.enable_bitmapscan}},
+		  "enable_seqscan": {{env.enable_seqscan}},
+		  "full_page_writes": {{env.full_page_writes}},
+		  "log_min_messages": {{env.log_min_messages}},
+		  "deadlock_timeout": {{env.deadlock_timeout}},
+		  "log_lock_waits": {{env.log_lock_waits}},
+		  "log_min_duration_statement": {{env.log_min_duration_statement}},
+		  "temp_buffers": {{env.temp_buffers}},
+		  "max_prepared_transactions": {{env.max_prepared_transactions}},
+		  "max_wal_senders": {{env.max_wal_senders}},
+		  "bgwriter_lru_maxpages": {{env.bgwriter_lru_maxpages}},
+		  "log_statement": {{env.log_statement}} ,
+		  "shared_preload_libraries": {{env.shared_preload_libraries}},
+		  "wal_level": {{env.wal_level}},
+		  "shared_buffers": {{env.shared_buffers}},
+		  "auto_failover": {{env.auto_failover}},
+		  "jit": {{env.jit}}
+		},
+		"endpoints": {
+			"client": {
+				"port": 5432,
+				"protocol": "TCP"
+			},
+			"reserved_ips": {
+				"vip": {
+					"value":""
+				},
+				"rvip": {
+					"value":""
+				}
+			}
+		}
+
+}

@@ -1,0 +1,5 @@
+[template]
+src = "pgpool.conf.tmpl"
+dest = "/usr/local/etc/pgpool.conf"
+keys = ["/",]
+reload_cmd = "/usr/lib/postgresql/scripts/pgpool.py restart"

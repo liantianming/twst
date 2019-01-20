@@ -1,0 +1,43 @@
+#修改之前的位置
+#PGDATA=/var/lib/postgresql/10/main
+#PGLOG=/var/lib/postgresql/10/main/log  
+默认配置文件路径：
+ /etc/postgresql/10/main/postgresql.conf
+ 
+
+#目前使用的路径  
+PGDATA=/data/pgsql/main
+PGHOME=/usr/lib/postgresql/10/
+PGCFG=/etc/postgresql/10/main
+PG_CONFIG=/etc/postgresql/10/main
+PGLOG=/data/pglog/
+PGSCRIPTSLOG=/data/pgsql/main/log/pgscripts.log
+PGCMD=/usr/lib/postgresql/scripts
+AGENTLOG=/opt/qingcloud/app-agent/log
+PGPATH=/usr/lib/postgresql/10/bin
+PATH=/usr/lib/postgresql/10/bin:${PATH}
+PGVERSION=10
+APPLOG=/data/pgsql/main/log
+
+export PGDATA PGHOME PGCFG PGLOG PGSCRIPTSLOG PGCMD AGENTLOG PGPATH PATH PGVERSION PGPASSWORD APPLOG
+ 
+ 
+忽略keepalived和healthcheck的文件位置
+/root/ignore_agent  
+touch ignore_agent
+
+脚本升级目录
+/data/customScripts/
+
+
+
+
+
+
+
+
+
+
+
+
+

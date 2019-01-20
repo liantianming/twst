@@ -1,0 +1,18 @@
+1.touch /etc/logrotate.d/pgscriptslog
+
+2.vim /etc/logrotate.d/pgscriptslog
+
+/data/pgsql/main/log/pgscripts.log
+{
+daily
+dateext
+copytruncate
+nocompress
+rotate 14 
+}
+
+3.add to system job 
+#crontab -e
+
+SHELL=/bin/bash
+00  0  *  *  *  logrotate -f /etc/logrotate.d/pgscriptslog 

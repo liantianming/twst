@@ -1,0 +1,28 @@
+"upgrade_policy": [
+    "appv-gy5pan69",
+    "appv-wpzp32pu",
+    "appv-bjaykuxy",
+    "appv-bunwngl9",
+    "appv-a0e3l8vm",
+    "appv-8a3nzzdl"
+    ],    
+======================================================================================================== 
+压力测试
+create database pgbench;
+./pgbench -i -s 20 pgbench 
+pgbench -c 80 -T 180 -r pgbench 
+
+# 测试数据库初始化
+http://blog.csdn.net/enzesheng/article/details/42720691
+默认数据是10w
+pgbench -i pgbench
+
+生成8千万数据的测试库
+pgbench -i  -s 800 pgbench
+
+生成20亿测试数据(海量数据生成，生成速度看机器配置)
+pgbench -i -s 20000 pgbench
+
+实验一：
+100个用户，每个用户10个事务：
+pgbench -c 100 -t 10 pgbench

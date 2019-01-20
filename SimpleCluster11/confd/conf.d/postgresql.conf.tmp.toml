@@ -1,0 +1,5 @@
+[template]
+src = "postgresql.conf.tmp.tmpl"
+dest = "/etc/postgresql/10/main/postgresql.conf.tmp"
+keys = ["/",]
+reload_cmd = "/usr/lib/postgresql/scripts/pgmanager.py reload"
