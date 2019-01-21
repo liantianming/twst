@@ -1,3 +1,4 @@
+#lzf
 import os
 import json
 import time
@@ -421,6 +422,11 @@ def get_max_conns():
     return requests.get("http://metadata/self/env/max_connections").text
 
 
+#lzf
+def get_max_conns_bysql():
+    ip = get_wvip()
+    return exec_cmd("psql -U postgres -h " + ip + " password=" + pg_password + " -t -c \" show max_connections;\"| sed 's/ //g'")
+
 def get_pg_mem():
     get_pg_mem_cmd = "curl -s http://metadata/self/hosts/pg/ | grep /memory | awk -F' ' {'print $2}'| sed 's/ //g'"
     mem = exec_cmd(get_pg_mem_cmd).splitlines()
@@ -475,14 +481,17 @@ def update_config_file():
     logging.info("update config file")
     exec_cmd("cat /etc/postgresql/" + pg_version + "/main/postgresql.conf.tmp > /etc/postgresql/" + pg_version + "/main/postgresql.conf")
     if is_sync_stream_repl():
+        logging.info("a>>>>>>>>>>>>>>>>>>>>>>>>>>")
         synchronous_standby_names = "FIRST 1 (" + get_best_successor().split('.')[-1] + ")"
         exec_cmd("sed -i \"s/synchronous_standby_names = ''/synchronous_standby_names = '" + synchronous_standby_names + "'/g\" " + pg_cfg_path + "/postgresql.conf")
     if get_max_conns() == "auto-optimized-conns":
         auto_optimized_max_conns = get_auto_optimized_max_conns()
         logging.info("set max_connections to auto_optimized_max_conns: %s" % auto_optimized_max_conns)
+        logging.info("b>>>>>>>>>>>>>>>>>>>>>>>>>>")
         exec_cmd("sed -i \"s/auto-optimized-conns/" + auto_optimized_max_conns + "/g\" /etc/postgresql/" + pg_version + "/main/postgresql.conf")
     if get_shared_buffers() == "auto-optimized-sharedbuffers":
         auto_optimized_shared_buffers = get_auto_optimized_shared_buffers()
+        logging.info("c>>>>>>>>>>>>>>>>>>>>>>>>>>")
         logging.info("set shared_buffers to auto_optimized_shared_buffers: %s" % auto_optimized_shared_buffers)
         exec_cmd("sed -i \"s/auto-optimized-sharedbuffers/" + auto_optimized_shared_buffers + "/g\" /etc/postgresql/" + pg_version + "/main/postgresql.conf")
     
@@ -490,9 +499,9 @@ def update_config_file():
 #lzf
 def update_pgpoolconfig_file():
     logging.info("set update_pgpoolconfig_file ...")
-    num_init_children = auto_num_init_children()
-    logging.info("set max_connections to num_init_children: %s" %cnum_init_children)
-    exec_cmd("sed -i \"/^num_init_children =/num_init_children = " + num_init_children + "\" /usr/local/etc/pgpool.conf")
+    num_init_children = str(auto_num_init_children())
+    logging.info("set max_connections to num_init_children: %s" %num_init_children)
+    exec_cmd("sed -i \"/^num_init_children =/c num_init_children = " + num_init_children + "\" /usr/local/etc/pgpool.conf")
     
     
 #lzf        
@@ -501,12 +510,12 @@ def get_max_pgpool():
 
 #lzf    
 def get_num_init_children():
-     return requests.get("http://metadata/self/env/num_init_children").text
+    return requests.get("http://metadata/self/env/num_init_children").text
      
 #lzf     
 def auto_num_init_children():
     logging.info("set auto_num_init_children ...")
-    auto_optimized_max_conns = get_auto_optimized_max_conns()
+    auto_optimized_max_conns = get_max_conns_bysql()
     logging.info("get get_auto_optimized_max_conns: %s " %auto_optimized_max_conns)
     max_pgpool = get_max_pgpool()
     logging.info("get get_max_pgpool: %s " %max_pgpool)
@@ -514,35 +523,39 @@ def auto_num_init_children():
     logging.info("get get_pgpool_count: %s " %pgpool_count)
     if pgpool_count == 0:
         pgpool_count = 1
-    init_children = get_num_init_children()
-    num_init_children = int(int(auto_optimized_max_conns)/int(pgpool_count)/int(max_pgpool))
-    if num_init_children > int(init_children):
-        return init_children
+    set_init_children = get_num_init_children()
+    logging.info("get get_num_init_children: %s " %init_children)
+    num_init_children = int(int(auto_optimized_max_conns)/int(pgpool_count)/int(max_pgpool))-3
+    logging.info("get num_init_children parameters largest number : %s " %num_init_children)
+    if num_init_children > int(set_init_children):
+        return set_init_children
     else:
+        logging.info("set error User setting num_init_children parameters is too large,Optimize to the largest number.")
         return num_init_children
     
 #lzf
 def get_pgpool_count():
     logging.info("get_pgpool_count ...")
     get_ip_cmd = "curl -s http://metadata/self/hosts/pgpool/ | grep /ip | wc -l | sed 's/ //g'| sort"
-    ip_list = exec_cmd(get_ip_cmd).splitlines()
+    ip_list = exec_cmd(get_ip_cmd)
     return int(ip_list)
     
 #lzf
 def reload():
     logging.info("reload configuration")
+    logging.info("*****************************")
     update_config_file()
     if check_need_restart():
         restart_pg()
     else:
         reload_cmd = "su - postgres -c \"" + pg_bin_path + "pg_ctl reload\""
         exec_cmd(reload_cmd)
+    reload_pgpool
     
     
     
 #lzf        
 def reload_pgpool():
-    #需要从起pgpool的配置
     logging.info("reload_pgpool configuration")
     update_pgpoolconfig_file()
         
@@ -558,6 +571,7 @@ def health_check():
             #lzf 检查出来pg出错时间
             if not (os.path.exists("/usr/lib/postgresql/scripts/tmppgdata_delaySeconds")):
                 pg_error_time = time.time()
+                logging.error("I am %s, and pg is not alive the time is %s." % (get_self_role(),pg_error_time))
                 write_pg_error_time = ("echo "+str(pg_error_time)+" > /usr/lib/postgresql/scripts/tmppgdata_delaySeconds")
                 exec_cmd(write_pg_error_time)
             return 1
@@ -566,6 +580,12 @@ def health_check():
             return 0
     else:
         logging.error("I am %s, and pg is not alive." % get_self_role())
+         #lzf 检查出来pg出错时间
+        if not (os.path.exists("/usr/lib/postgresql/scripts/tmppgdata_delaySeconds")):
+            pg_error_time = time.time()
+            logging.error("I am %s, and pg is not alive the time is %s." % (get_self_role(),pg_error_time))
+            write_pg_error_time = ("echo "+str(pg_error_time)+" > /usr/lib/postgresql/scripts/tmppgdata_delaySeconds")
+            exec_cmd(write_pg_error_time)
         return 1
 
 
@@ -578,7 +598,6 @@ def standby_to_primary():
         return False
     else:
         return True
-    
     
     
     
