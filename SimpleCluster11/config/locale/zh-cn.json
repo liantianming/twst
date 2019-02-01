@@ -129,5 +129,6 @@
 	"enables the serialization on incoming client connections.":"序列化连接请求，child_life_time为0时生效【修改该值会重启pgpool】。",
 	"Specifies the time in seconds to terminate a Pgpool-II child process if it remains idle.":"指定以秒为单位终止PGPoCII空闲子进程的时间以防止内存泄漏，0表示禁用这个特性【修改该值会重启pgpool】。",
 	"Specifies the time in seconds to terminate the cached connections to the PostgreSQL backend.":"指定以秒为单位终止PostgreSQL连接的时间，0表示禁用这个特性【修改该值会重启pgpool】。",
-	"Specifies the time in seconds to disconnect a client if it remains idle since the last query.":"指定自上次查询以来客户端连接以秒为单位的生存时间，0表示禁用这个特性【修改该值会重启pgpool】。"
+	"Specifies the time in seconds to disconnect a client if it remains idle since the last query.":"指定自上次查询以来客户端连接以秒为单位的生存时间，0表示禁用这个特性【修改该值会重启pgpool】。",
+	"Allow JIT compilation.":"允许jit 编码。"
 	}

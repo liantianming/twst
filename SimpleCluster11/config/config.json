@@ -634,7 +634,7 @@
 			{
 				"key": "jit",
 				"label": "jit",
-				"description": "allow JIT compilation.",
+				"description": "Allow JIT compilation.",
 				"type": "string",
 				"default": "off", 
 				"range": ["on", "off"],
